@@ -27,7 +27,7 @@ const Login = () => {
         try {
             const request = await loginUser(data);
             login(request.data.token);
-            navigate('/');
+            navigate('/employees');
             setError('');
         } catch (error) {
             setError('Invalid credentials, try again...');

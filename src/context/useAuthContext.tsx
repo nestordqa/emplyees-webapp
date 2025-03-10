@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import {jwtDecode} from 'jwt-decode';
+import { logoutUser } from '../services/auth';
 
 interface AuthContextType {
     user: { id: string; email: string } | null;
@@ -31,8 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     //Logout flow
-    const logout = () => {
-        localStorage.removeItem('token');
+    const logout = async () => {
+        await logoutUser();
         setUser(null);
     };
 

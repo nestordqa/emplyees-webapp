@@ -1,6 +1,7 @@
 import { User } from '../types/common';
 import api from './api';
 
+//Login request
 export const loginUser = async (credentials: Pick<User, 'email' | 'password'>) => {
     try {
         const response = await api.post('/api/auth/login', credentials);
@@ -10,6 +11,7 @@ export const loginUser = async (credentials: Pick<User, 'email' | 'password'>) =
     }
 };
 
+//Register a new user
 export const registerUser = async (userData: User) => {
     try {
         const response = await api.post('/api/auth/register', userData);
@@ -19,6 +21,7 @@ export const registerUser = async (userData: User) => {
     }
 };
 
+//Logout flow
 export const logoutUser = async () => {
     try {
         await api.post('/api/auth/logout');
