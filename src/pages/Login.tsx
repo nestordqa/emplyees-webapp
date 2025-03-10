@@ -92,7 +92,7 @@ const Login = () => {
                                 component="button" 
                                 type="button"
                                 onClick={() => navigate('/register')}
-                                sx={{ color: 'text.secondary' }}
+                                sx={{ color: 'text.secondary', textDecoration: 'none' }}
                             >
                                 Dont you have an account? Sign up here!
                             </Link>

@@ -171,7 +171,7 @@ const Register = () => {
                                 component="button" 
                                 type="button"
                                 onClick={() => navigate('/')}
-                                sx={{ color: 'text.secondary' }}
+                                sx={{ color: 'text.secondary', textDecoration: 'none' }}
                             >
                                 Already have an account? Login here!
                             </Link>

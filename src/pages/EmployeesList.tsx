@@ -1,208 +1,154 @@
-import { useState, useEffect } from 'react';
-import { Employee } from '../types/common';
+import { useState } from 'react';
+import { Container, Paper, Grid, Typography, Button, Pagination } from '@mui/material';
+import { Add } from '@mui/icons-material';
 import useEmployees from '../hooks/useEmployees';
-import {
-  Container,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-  Typography,
-  Card,
-  CardContent,
-  CardActions,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  InputAdornment
-} from '@mui/material';
-import { Edit, Delete, Search, Person } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
-import dayjs from 'dayjs';
-import { DatePicker } from '@mui/x-date-pickers';
-import { getPositions } from '../services/employees';
+import EmployeeForm from '../components/employees/EmployeesForm';
+import ConfirmDialog from '../components/employees/EmployeeDelete';
+import EmployeeSearch from '../components/employees/SearchEmployee';
+import EmployeeCard from '../components/employees/EmployeeCard';
+import { Employee } from '../types/common';
+import AlertMessage from '../components/common/Alert';
 
+// Employees list page
 const EmployeeList = () => {
-    const { employees, deleteEmployee, updateEmployee } = useEmployees();
+    const { employees, deleteEmployee, updateEmployee, createEmployee } = useEmployees();
     const [searchTerm, setSearchTerm] = useState('');
+    const [error, setError] = useState('');
+    const [alertOpen, setAlertOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-    const [positions, setPositions] = useState<any[]>([]);
-    const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm<Employee>();
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchPositions = async () => {
-            const data = await getPositions();
-            setPositions(data);
-        };
-        fetchPositions();
-    }, []);
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // Number of employees
 
-    useEffect(() => {
-        if (selectedEmployee) {
-            setValue('firstName', selectedEmployee.firstName);
-            setValue('lastName', selectedEmployee.lastName);
-            setValue('job_position', selectedEmployee.job_position);
-            setValue('birthdate', selectedEmployee.birthdate);
-        }
-    }, [selectedEmployee, setValue]);
-
-    const handleUpdate = async (data: Employee) => {
-        if (selectedEmployee) {
-            await updateEmployee(selectedEmployee.id, data);
-            setSelectedEmployee(null);
-        }
+    //Handle alert close
+    const handleAlertClose = () => {
+        setAlertOpen(false); // Cierra la alerta
+        setError(''); // Resetea el mensaje de error
     };
+
+    // Show create employee modal
+    const handleCreate = async (data: Employee) => {
+        const newEmp = await createEmployee(data);
+        if (newEmp && newEmp.status && newEmp.status !== 201) {
+            setError(newEmp?.response?.data?.error);
+            setAlertOpen(true);
+            return;
+        }
+        
+        setIsCreateOpen(false);
+    };
+
+    // Show edit employee modal
+    const handleEdit = (data: Employee) => {
+        if (selectedEmployee) {
+            updateEmployee(selectedEmployee._id, data);
+        }
+        setSelectedEmployee(null);
+    };
+
+    // Show delete employee dialog
+    const handleDelete = (id: string) => {
+        setEmployeeToDelete(id);
+        setIsConfirmOpen(true);
+    };
+    
+    // Deletes the employee selected
+    const confirmDelete = () => {
+        if (employeeToDelete) {
+            deleteEmployee(employeeToDelete);
+        }
+        setIsConfirmOpen(false);
+        setEmployeeToDelete(null);
+    };
+
+    // Get the current employees
+    const filteredEmployees = employees.filter(emp =>
+        emp.firstName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage); // Total of pages
+    const currentEmployees = filteredEmployees.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage); // Current employees per page
 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-                    Lista de Empleados
-                </Typography>
-
-                <TextField
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Buscar empleados..."
-                    InputProps={{
-                        startAdornment: (
-                        <InputAdornment position="start">
-                            <Search />
-                        </InputAdornment>
-                        ),
-                    }}
-                    sx={{ mb: 3 }}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-
-                <Grid container spacing={3}>
-                    {employees.filter(emp => 
-                        emp.firstName.toLowerCase().includes(searchTerm.toLowerCase())
-                    ).map((employee, index) => (
-                        <Grid item xs={12} md={6} key={employee.id}  key={index}>
-                            <Card variant="outlined">
-                                <CardContent>
-                                    <Typography variant="h6" gutterBottom>
-                                        <Person sx={{ verticalAlign: 'middle', mr: 1 }} />
-                                        {employee.firstName} {employee.lastName}
-                                    </Typography>
-                                    
-                                    <Typography variant="body2" color="text.secondary" paragraph>
-                                        Puesto: {employee.job_position}
-                                    </Typography>
-                                    
-                                    <Typography variant="caption">
-                                        Nacimiento: {dayjs(employee.birthdate).format('DD/MM/YYYY')}
-                                    </Typography>
-                                </CardContent>
-                                
-                                <CardActions>
-                                    <IconButton 
-                                        color="primary" 
-                                        onClick={() => setSelectedEmployee(employee)}
-                                    >
-                                        <Edit />
-                                    </IconButton>
-                                    <IconButton 
-                                        color="error" 
-                                        onClick={() => deleteEmployee(employee.id)}
-                                    >
-                                        <Delete />
-                                    </IconButton>
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-
-                <Dialog 
-                    open={!!selectedEmployee} 
-                    onClose={() => setSelectedEmployee(null)}
-                    fullWidth
-                    maxWidth="sm"
-                >
-                <DialogTitle>
-                    <Edit sx={{ verticalAlign: 'middle', mr: 1 }} />
-                    Editar Empleado
-                </DialogTitle>
-                
-                <form onSubmit={handleSubmit(handleUpdate)}>
-                    <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Nombre"
-                                fullWidth
-                                {...register('firstName', { required: 'Campo requerido' })}
-                                error={!!errors.firstName}
-                                helperText={errors.firstName?.message}
-                            />
-                        </Grid>
-                        
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Apellido"
-                                fullWidth
-                                {...register('lastName', { required: 'Campo requerido' })}
-                                error={!!errors.lastName}
-                                helperText={errors.lastName?.message}
-                            />
-                        </Grid>
-
-                        <Grid item xs={12}>
-                            <TextField
-                                select
-                                label="Puesto de trabajo"
-                                fullWidth
-                                {...register('job_position', { required: 'Seleccione un puesto' })}
-                                error={!!errors.job_position}
-                                helperText={errors.job_position?.message}
-                            >
-                                {positions.map((position) => (
-                                <MenuItem key={position.id} value={position.name}>
-                                    {position.name}
-                                </MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-
-                        <Grid item xs={12}>
-                        <DatePicker
-                            label="Fecha de nacimiento"
-                            value={dayjs(selectedEmployee?.birthdate)}
-                            onChange={(date) => setValue('birthdate', date?.toDate())}
-                            slotProps={{
-                            textField: {
-                                fullWidth: true,
-                                error: !!errors.birthdate,
-                                helperText: errors.birthdate?.message
-                            }
-                            }}
-                        />
-                        </Grid>
-                    </Grid>
-                    </DialogContent>
-
-                    <DialogActions sx={{ p: 3 }}>
-                    <Button 
-                        onClick={() => setSelectedEmployee(null)}
-                        color="inherit"
-                    >
-                        Cancelar
-                    </Button>
-                    <Button 
-                        type="submit" 
+                {/* Header list */}
+                <Grid container justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                        Employees List
+                    </Typography>
+                    <Button
                         variant="contained"
                         color="primary"
+                        startIcon={<Add />}
+                        onClick={() => setIsCreateOpen(true)}
                     >
-                        Guardar Cambios
+                        Create Employee
                     </Button>
-                    </DialogActions>
-                </form>
-                </Dialog>
+                </Grid>
+
+                <EmployeeSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+                <Grid container spacing={3}>
+                    {currentEmployees && currentEmployees.length > 0 ? currentEmployees.map((employee) => (
+                        <Grid item xs={12} md={6} key={employee._id}>
+                            <EmployeeCard
+                                employee={employee}
+                                onEdit={() => setSelectedEmployee(employee)}
+                                onDelete={() => handleDelete(employee._id)}
+                            />
+                        </Grid>
+                    ))
+                    :
+                    <Grid item xs={12} md={6}>
+                        <Typography variant="h1" component="h1" sx={{ fontWeight: 600, fontSize: '2em', textAlign: 'center' }}>
+                            There are not employees yet
+                        </Typography>      
+                    </Grid>          
+                }
+                </Grid>
+
+                {/* Paginación */}
+                <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(event, value) => setCurrentPage(value)}
+                    color="primary"
+                    sx={{ mt: 3 }} // Margen superior para separación visual
+                />
+
+                <EmployeeForm
+                    open={!!selectedEmployee}
+                    onClose={() => setSelectedEmployee(null)}
+                    employee={selectedEmployee}
+                    onSubmit={handleEdit}
+                />
+
+                <EmployeeForm
+                    open={isCreateOpen}
+                    onClose={() => setIsCreateOpen(false)}
+                    onSubmit={handleCreate}
+                    employee={null}
+                />
+
+                <AlertMessage 
+                    open={alertOpen}
+                    onClose={handleAlertClose}
+                    message={error}
+                    severity="error" 
+                />
+
+                <ConfirmDialog
+                    open={isConfirmOpen}
+                    onClose={() => setIsConfirmOpen(false)}
+                    onConfirm={confirmDelete}
+                    title="Delete employee"
+                    content="Are you sure you want to delete this employee?"
+                />
             </Paper>
         </Container>
     );

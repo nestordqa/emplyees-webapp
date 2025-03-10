@@ -28,16 +28,35 @@ const useEmployees = () => {
         employees,
         loading,
         createEmployee: async (employee: Omit<Employee, 'id'>) => {
-            const newEmployee = await createEmployee(employee);
-            setEmployees([...employees, newEmployee]);
+            try {
+                const newEmployee = await createEmployee(employee);
+                if (newEmployee && newEmployee.status && newEmployee.status !== 201) {
+                    return newEmployee;
+                } else {
+                    setEmployees([...employees, newEmployee]);
+                }
+            } catch (error) {
+                console.error(error);
+                return error;
+            }
         },
         updateEmployee: async (id: string, updates: Partial<Employee>) => {
-            const updatedEmployee = await updateEmployee(id, updates);
-            setEmployees(employees.map(emp => emp.id === id ? updatedEmployee : emp));
+            try {
+                const updatedEmployee = await updateEmployee(id, updates);
+                setEmployees(employees.map(emp => emp._id === id ? updatedEmployee : emp));   
+            } catch (error) {
+                console.error(error);
+                return error;
+            }
         },
         deleteEmployee: async (id: string) => {
-            await deleteEmployee(id);
-            setEmployees(employees.filter(emp => emp.id !== id));
+            try {
+                await deleteEmployee(id);
+                setEmployees(employees.filter(emp => emp._id !== id));   
+            } catch (error) {
+                console.error(error);
+                return error;
+            }
         }
     };
 };

@@ -8,7 +8,7 @@ import Navbar from './components/layout/Navbar';
 
 function App() {
 	return (
-			<AuthProvider>
+		<AuthProvider>
 			<BrowserRouter>
 				<Navbar />
 				<Routes>

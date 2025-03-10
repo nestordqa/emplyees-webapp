@@ -1,4 +1,5 @@
-import { Employee, Position } from '../types/common';
+import axios from 'axios';
+import { Employee } from '../types/common';
 import api from './api';
 
 //Get all employees
@@ -24,20 +25,20 @@ export const getEmployeeById = async (id: string): Promise<Employee> => {
 };
 
 //Create an employee
-export const createEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<Employee> => {
+export const createEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<Employee | unknown> => {
     try {
         const response = await api.post('/api/employees', employeeData);
         return response.data.data;
     } catch (error) {
         console.error('Error creating employee:', error);
-        throw new Error('Could not create employee. Please try again later.');
+        return (error);
     }
 };
 
 //Update an employee
 export const updateEmployee = async (id: string, updates: Partial<Employee>): Promise<Employee> => {
     try {
-        const response = await api.patch(`/api/employees/${id}`, updates);
+        const response = await api.put(`/api/employees/${id}`, updates);
         return response.data.data;
     } catch (error) {
         console.error(`Error updating employee with ID ${id}:`, error);
@@ -56,12 +57,12 @@ export const deleteEmployee = async (id: string): Promise<void> => {
 };
 
 // Get all positions
-export const getPositions = async (): Promise<Position[]> => {
+export const getPositions = async (): Promise<string[] | null> => {
     try {
-        const response = await api.get('/api/employees/positions');
-        return response.data;
+        const response = await axios.get('https://ibillboard.com/api/positions');
+        return response.data.positions;   
     } catch (error) {
-        console.error('Error fetching positions:', error);
-        throw new Error('Could not fetch positions. Please try again later.');
+        console.error('Positions error: ', error);
+        return null;
     }
 };
