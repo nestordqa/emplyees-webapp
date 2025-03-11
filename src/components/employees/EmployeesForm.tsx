@@ -8,7 +8,7 @@ import {
     DialogContent,
     DialogActions,
     MenuItem,
-    FormHelperText, // Importar para mostrar mensajes de error
+    FormHelperText,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import dayjs from 'dayjs';
