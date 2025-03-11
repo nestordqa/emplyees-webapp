@@ -26,8 +26,8 @@ const EmployeeList = () => {
 
     //Handle alert close
     const handleAlertClose = () => {
-        setAlertOpen(false); // Cierra la alerta
-        setError(''); // Resetea el mensaje de error
+        setAlertOpen(false); // Close alert
+        setError(''); // Resets error message
     };
 
     // Show create employee modal
@@ -112,13 +112,13 @@ const EmployeeList = () => {
                 }
                 </Grid>
 
-                {/* Paginación */}
+                {/* Pagination */}
                 <Pagination
                     count={totalPages}
                     page={currentPage}
                     onChange={(event, value) => setCurrentPage(value)}
                     color="primary"
-                    sx={{ mt: 3 }} // Margen superior para separación visual
+                    sx={{ mt: 3 }}
                 />
 
                 <EmployeeForm
